@@ -1,0 +1,10 @@
+[proxy]
+node1.orb.local
+[apps]
+node2.orb.local
+node3.orb.local
+[nosql]
+node4.orb.local
+[db]
+node5.orb.local
+
