@@ -1,0 +1,9 @@
+---
+# 定义Drupal要使用的版本 (比如：6.x, 7.x, 8.0.x)
+drupal_core_version: "8.0.x"
+# 定义Drupal将被下载和安装的路径
+drupal_core_path: "/var/www/drupal-{{ drupal_core_version }}-dev"
+# 定义域名
+domain: "drupaltest"
+# Drupal网站的名称
+drupal_site_name: "Drupal Test"

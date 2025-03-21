@@ -1,0 +1,125 @@
+---
+- hosts: apps
+  vars_files:
+    - vars.yml
+  pre_tasks:
+    - name: Update apt cache if needed.
+      apt: update_cache=yes cache_valid_time=3600
+    - name: stopped nginx
+      service: name=nginx state=stopped
+  handlers:
+    - name: restart apache
+      service: name=httpd state=restarted
+  tasks:
+    - name: "安装用来管理ATP源的工具"
+      apt: name={{ item }} state=present
+      with_items:
+        - python3-apt
+        - python3-pycurl
+    # - name: "添加包含5.5版本PHP的ondrej源"
+    #   apt_repository: repo='ppa:ondrej/php5-5.6' update_cache=yes
+    - name: "安装Apache、MySQL、PHP，以及依赖关系"
+      apt: name={{ item }} state=present
+      with_items:
+        - git
+        - curl
+        - sendmail
+        - apache2
+        - php
+        - php-common
+        - php-mysql
+        - php-cli
+        - php-curl
+        - php-gd
+        - php-dev
+        - php-mcrypt
+        - php-apcu
+        - php-pear
+        - python3-mysqldb
+        - mysql-server
+        - ufw
+    - name: "关闭防火墙(因为本项目仅供本地开发使用)"
+      service: name=ufw state=stopped
+    - name: "启动Apache、MySQL和PHP"
+      service: "name={{ item }} state=started enabled=yes"
+      with_items:
+        - apache2
+        - mysql
+    - name: "Enable Apache rewrite module (required for Drupal)."
+      apache2_module: name=rewrite state=present
+      notify: restart apache
+    - name: 在Apache中为Drupal添加虚拟主机
+      template:
+        src: "templates/dru-pal.dev.conf.j2"
+        dest: "/etc/apache2/sites-available/{{ domain }}.dev.conf"
+        owner: root
+        group: root
+        mode: 0644
+      notify: restart apache
+    - name: 在sites-enabled目录中添加Drupal所需配置文件的符号链接
+      file:
+        src: "/etc/apache2/sites-available/{{ domain }}.dev.conf"
+        dest: "/etc/apache2/sites-enabled/{{ domain }}.dev.conf"
+        state: link
+      notify: restart apache
+    - name: Enable upload progress via APC.
+      lineinfile: # lineinfile模块是Ansible编辑文件内容的一大利器。
+        dest: /etc/php/8.3/apache2/conf.d/20-apcu.ini
+        regexp: '^;apc\.rfc1867'
+        line: 'apc.rfc1867 = 1'
+        state: present
+      notify: restart apache
+    - name: 删除test数据库
+      mysql_db: db=test state=absent
+    - name: 创建Drupal数据库
+      mysql_db: "db={{ domain }} state=present"
+    - name: Download composer installer.
+      get_url:
+        url: https://getcomposer.org/installer
+        dest: /tmp/composer-installer.php
+        mode: 0755
+    - name: Run composer installer.
+      command: >
+        php /tmp/composer-installer.php
+        chdir=/tmp
+        creates=/usr/local/bin/composer 
+        # 任务中的creates选项是command模块和Shell模块共有的选项，表示如果文件存在，就不再执行相应的命令。
+    - name: Move Composer into globally-accessible location.
+      shell: >
+        mv /tmp/composer.phar /usr/local/bin/composer
+        creates=/usr/local/bin/composer
+    - name: Download Drush from GitHub.
+      git:
+        repo: https://github.com/drush-ops/drush.git
+        dest: /opt/drush
+    - name: Use composer to install Drush.
+      shell: >
+        /usr/local/bin/composer install
+        chdir=/opt/drush
+        creates=/opt/drush/vendor/autoload.php
+    - name: 创建Drush命令的符号连接。
+      file:
+        src: /opt/drush/drush
+        dest: /usr/local/bin/drush
+        state: link
+    - name: 下载Drupal代码到Apache的DocumentRoot
+      git:
+        repo: http://git.drupal.org/project/drupal.git
+        version: "{{ drupal_core_version }}"
+        dest: "{{ drupal_core_path }}"
+    - name: 安装Drupal
+      command: >
+        drush si -y --site-name="{{ drupal_site_name }}" --account-name=admin --account-pass=admin --db-url=mysql://root@localhost/{{ domain }}
+        chdir={{ drupal_core_path }}
+        creates={{ drupal_core_path }}/sites/default/settings.php
+      notify: restart apache
+    - name: 为settings.php设置正确的权限
+      file:
+        path: "{{ drupal_core_path }}/sites/default/settings.php"
+        mode: 0744
+    - name: 开放files目录的所有权限
+      file:
+        path: "{{ drupal_core_path }}/sites/default/files"
+        mode: 0777
+        state: directory
+        recurse: yes
