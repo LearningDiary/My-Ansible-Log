@@ -10,8 +10,8 @@
     - name: 发送JDK软件包和Java配置文件到远程主机
       copy: "src={{ item.src }} dest={{ item.dest }}"
       with_items:
-        - src: "./jdk-8u11-linux-x64.tar.gz"
-          dest: "/tmp/jdk-8u11-linux-x64.tar.gz"
+        - src: "./jdk-8u441-linux-x64.tar.gz"
+          dest: "/tmp/jdk-8u441-linux-x64.tar.gz"
         - src: "./java.sh"
           dest: "/etc/profile.d/"
     - name: 创建Java安装目录
@@ -19,7 +19,7 @@
         mkdir -p /opt/java
     - name: 解压JDK软件包
       command: >
-        tar -C /opt/java -xvf {{ download_dir }}/jdk-8u11-linux-x64.tar.gz
+        tar -C /opt/java -xvf {{ download_dir }}/jdk-8u441-linux-x64.tar.gz
         --strip-components=1
     - name: 为java更新alternatives
       command: >
@@ -34,7 +34,7 @@
       user: "name=tomcat shell=/sbin/nologin"
     - name: 下载Tomcat软件包
       get_url:
-        url: "http://apache.fayea.com/tomcat/tomcat-8/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version}}.tar.gz"
+        url: "https://dlcdn.apache.org/tomcat/tomcat-10/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz"
         dest: "{{ download_dir }}/apache-tomcat-{{ tomcat_version }}.tar.gz"
     - name: 解压缩Tomcat软件包
       command: >
@@ -43,10 +43,11 @@
     - name: 发送Tomcat的Upstart配置文件到远程主机
       copy: "src=./tomcat.conf   dest=/etc/init/tomcat.conf"
     - name: 重载Upstart配置文件
-      command: initctl reload-configuration
+      command: systemctl daemon-reload
     - name: 下载新版Solr软件包
       get_url:
-        url: "http://apache.fayea.com/lucene/solr/{{ solr_version }}/solr-{{ solr_version }}.tgz"
+        url: "https://dlcdn.apache.org/solr/solr/9.8.1/solr-9.8.1.tgz"
+        #url: "https://dlcdn.apache.org/solr/solr/{{ solr_version }}/solr-{{ solr_version }}.tgz"
         dest: "{{ download_dir }}/solr-{{ solr_version }}.tgz"
     - name: 创建Solr安装目录
       command: >
