@@ -92,9 +92,14 @@
       git:
         repo: https://github.com/drush-ops/drush.git
         dest: /opt/drush
+    # - name: 设置Composer镜像源。
+    #   shell: >
+    #     composer config -g repo.packagist composer https://repo.huaweicloud.com/composer/
+    #     chdir=/tmp
+    #     creates=/tmp/composer.json
     - name: Use composer to install Drush.
       shell: >
-        /usr/local/bin/composer install
+        /usr/local/bin/composer install --repository-url="https://mirrors.cloud.tencent.com/composer/"
         chdir=/opt/drush
         creates=/opt/drush/vendor/autoload.php
     - name: 创建Drush命令的符号连接。
@@ -109,7 +114,8 @@
         dest: "{{ drupal_core_path }}"
     - name: 安装Drupal
       command: >
-        drush si -y --site-name="{{ drupal_site_name }}" --account-name=admin --account-pass=admin --db-url=mysql://root@localhost/{{ domain }}
+        drush si -y --site-name="{{ drupal_site_name }}" --account-name=admin 
+        --account-pass=admin --db-url=mysql://root@localhost/{{ domain }}
         chdir={{ drupal_core_path }}
         creates={{ drupal_core_path }}/sites/default/settings.php
       notify: restart apache
