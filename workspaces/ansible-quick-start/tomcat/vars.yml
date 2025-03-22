@@ -2,18 +2,10 @@
 # 软件包下载路径
 download_dir: /tmp
 # Tomcat版本号
-<<<<<<< HEAD
 tomcat_version: 10.1.39
-=======
-tomcat_version: 8.0.35
->>>>>>> ed67bc3 (feat(ansible-quick-start): 添加 Tomcat 和 Solr 部署 playbook)
 # Tomcat安装路径
 tomcat_dir: /opt/tomcat
 # Solr安装路径
 solr_dir: /opt/solr
 # Solr版本号（最新版）
-<<<<<<< HEAD
 solr_version: 9.8.1
-=======
-solr_version: 6.1.0
->>>>>>> ed67bc3 (feat(ansible-quick-start): 添加 Tomcat 和 Solr 部署 playbook)
