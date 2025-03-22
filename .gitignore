@@ -1,0 +1,24 @@
+# idea
+.idea
+.idea/
+*.iml
+.DS_Store
+**/.DS_Store
+
+#deploy data
+**/*.tar.gz
+
+
+# gitlab ci
+.cache
+**/bin/
+web/
+#vscode
+.vscode
+.vscode/
+
+# swagger files
+swagger/*.json
+
+# logs
+scripts/logs/
