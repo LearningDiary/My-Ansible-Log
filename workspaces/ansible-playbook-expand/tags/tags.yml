@@ -1,0 +1,10 @@
+# 最简洁的写法
+tags: ['one', 'two', 'three']
+# 最清晰的写法
+tags1:
+  - one
+  - two
+  - three
+
+# 不正确的写法
+# tags: one, two, three
